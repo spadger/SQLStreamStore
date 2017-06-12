@@ -54,7 +54,7 @@
             _streamMessageReceived = streamMessageReceived;
             _prefectchJsonData = prefectchJsonData;
             _subscriptionDropped = subscriptionDropped ?? ((_, __, ___) => { });
-            _hasCaughtUp = hasCaughtUp ?? ((_) => { });
+            _hasCaughtUp = hasCaughtUp ?? (_ => { });
             Name = string.IsNullOrWhiteSpace(name) ? Guid.NewGuid().ToString() : name;
 
             readonlyStreamStore.OnDispose += ReadonlyStreamStoreOnOnDispose;
