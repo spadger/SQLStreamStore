@@ -18,6 +18,7 @@
 #elif NETSTANDARD1_3
         private static readonly ILog s_logger = LogProvider.GetLogger("SqlStreamStore.Subscriptions.PollingStreamStoreNotifier");
 #endif
+        private readonly IReadonlyStreamStore _store;
         private readonly CancellationTokenSource _disposed = new CancellationTokenSource();
         private readonly Func<CancellationToken, Task<long>> _readHeadPosition;
         private readonly int _interval;
@@ -26,11 +27,13 @@
         /// <summary>
         ///     Initializes a new instance of of <see cref="PollingStreamStoreNotifier"/>.
         /// </summary>
-        /// <param name="readonlyStreamStore">The store to poll.</param>
+        /// <param name="store">The store to poll.</param>
         /// <param name="interval">The interval to poll in milliseconds. Default is 1000.</param>
-        public PollingStreamStoreNotifier(IReadonlyStreamStore readonlyStreamStore, int interval = 1000)
-            : this(readonlyStreamStore.ReadHeadPosition, interval)
-        {}
+        public PollingStreamStoreNotifier(IReadonlyStreamStore store, int interval = 1000)
+            : this(store.ReadHeadPosition, interval)
+        {
+            _store = store;
+        }
 
         /// <summary>
         ///     Initializes a new instance of of <see cref="PollingStreamStoreNotifier"/>.
@@ -54,10 +57,11 @@
 
         private async Task Poll()
         {
-            long headPosition = -1;
-            long previousHeadPosition = headPosition;
+            long previousHeadPosition = -1;
             while (!_disposed.IsCancellationRequested)
             {
+                var headPosition = await ReliablyReadHeadPosition();
+/*
                 try
                 {
                     headPosition = await _readHeadPosition(_disposed.Token);
@@ -71,10 +75,11 @@
                 {
                     s_logger.ErrorException($"Exception occurred polling stream store for messages. " +
                                             $"HeadPosition: {headPosition}", ex);
-                }
+                }*/
 
-                if(headPosition > previousHeadPosition)
+                if(headPosition > previousHeadPosition && previousHeadPosition > -1)
                 {
+                    //await _store.ReadAllForwards(previousHeadPosition)
                     _storeAppended.OnNext(new StreamsUpdated(new Dictionary<string, int>()));
                     previousHeadPosition = headPosition;
                 }
@@ -82,6 +87,31 @@
                 {
                     await Task.Delay(_interval, _disposed.Token);
                 }
+            }
+        }
+
+        private async Task<long> ReliablyReadHeadPosition()
+        {
+            while (true)
+            {
+                _disposed.Token.ThrowIfCancellationRequested();
+                long headPosition = -1;
+                try
+                {
+                    headPosition = await _readHeadPosition(_disposed.Token);
+                    if (s_logger.IsTraceEnabled())
+                    {
+                        s_logger.TraceFormat("Polling head position {headPosition}.", headPosition);
+                    }
+                    return headPosition;
+                }
+                catch (Exception ex)
+                {
+                    s_logger.ErrorException("Exception occurred polling stream store for messages. " +
+                                            $"HeadPosition: {headPosition}",
+                        ex);
+                }
+                await Task.Delay(_interval, _disposed.Token);
             }
         }
     }
