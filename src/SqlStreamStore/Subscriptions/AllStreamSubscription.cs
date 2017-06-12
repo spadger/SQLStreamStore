@@ -37,7 +37,7 @@
         public AllStreamSubscription(
             long? continueAfterPosition,
             IReadonlyStreamStore readonlyStreamStore,
-            IObservable<Unit> streamStoreAppendedNotification,
+            IObservable<IStreamsUpdated> streamStoreAppendedNotification,
             AllStreamMessageReceived streamMessageReceived,
             AllSubscriptionDropped subscriptionDropped,
             HasCaughtUp hasCaughtUp,

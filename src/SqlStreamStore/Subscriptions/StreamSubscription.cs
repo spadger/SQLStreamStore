@@ -41,7 +41,7 @@
             string streamId,
             int? continueAfterVersion,
             IReadonlyStreamStore readonlyStreamStore,
-            IObservable<Unit> streamStoreAppendedNotification,
+            IObservable<IStreamsUpdated> streamStoreAppendedNotification,
             StreamMessageReceived streamMessageReceived,
             SubscriptionDropped subscriptionDropped,
             HasCaughtUp hasCaughtUp,
@@ -60,7 +60,7 @@
             readonlyStreamStore.OnDispose += ReadonlyStreamStoreOnOnDispose;
 
             _notification = streamStoreAppendedNotification.Subscribe(_ =>
-            {
+            { 
                 _streamStoreNotification.Set();
             });
 

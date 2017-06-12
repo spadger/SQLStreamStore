@@ -1,6 +1,7 @@
 ﻿namespace SqlStreamStore.Subscriptions
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using SqlStreamStore.Infrastructure;
@@ -20,7 +21,7 @@
         private readonly CancellationTokenSource _disposed = new CancellationTokenSource();
         private readonly Func<CancellationToken, Task<long>> _readHeadPosition;
         private readonly int _interval;
-        private readonly Subject<Unit> _storeAppended = new Subject<Unit>();
+        private readonly Subject<IStreamsUpdated> _storeAppended = new Subject<IStreamsUpdated>();
 
         /// <summary>
         ///     Initializes a new instance of of <see cref="PollingStreamStoreNotifier"/>.
@@ -49,7 +50,7 @@
         }
 
         /// <inheritdoc />
-        public IDisposable Subscribe(IObserver<Unit> observer) => _storeAppended.Subscribe(observer);
+        public IDisposable Subscribe(IObserver<IStreamsUpdated> observer) => _storeAppended.Subscribe(observer);
 
         private async Task Poll()
         {
@@ -74,7 +75,7 @@
 
                 if(headPosition > previousHeadPosition)
                 {
-                    _storeAppended.OnNext(Unit.Default);
+                    _storeAppended.OnNext(new StreamsUpdated(new Dictionary<string, int>()));
                     previousHeadPosition = headPosition;
                 }
                 else

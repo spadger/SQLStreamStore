@@ -15,7 +15,7 @@ namespace SqlStreamStore
         /// <summary>
         ///     Initialized a new instance of <see cref="MsSqlStreamStoreSettings"/>.
         /// </summary>
-        /// <param name="connectionString"></param>
+        /// <param name="connectionString">A connection string to the </param>
         public MsSqlStreamStoreSettings(string connectionString)
         {
             Ensure.That(connectionString, nameof(connectionString)).IsNotNullOrWhiteSpace();
@@ -59,7 +59,6 @@ namespace SqlStreamStore
         ///     max age for the specified timespan. The default is 1 minute.
         /// </summary>
         public TimeSpan MetadataMaxAgeCacheExpire { get; set; } = TimeSpan.FromMinutes(1);
-
 
         /// <summary>
         ///     To help with perf, the max age of messages in a stream,

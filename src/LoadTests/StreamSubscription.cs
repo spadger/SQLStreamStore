@@ -58,22 +58,23 @@ namespace LoadTests
                     eventNumber++;
                 }
                 amendAcount++;
-                Console.Write($"\r> Ammending: {amendAcount} / {numberOfAmends} . Received: {messagesReceived} / {totalMessages}");
+                Console.Write($"\r> Ammending: {amendAcount} / {numberOfAmends} ({eventNumber}). Received: {messagesReceived} / {totalMessages}");
             }
 
             while(messagesReceived < totalMessages)
             {
-                Console.Write($"\r> Ammending: {amendAcount} / {numberOfAmends} . Received: {messagesReceived} / {totalMessages}");
+                Console.Write($"\r> Ammending: {amendAcount} / {numberOfAmends} ({eventNumber}). Received: {messagesReceived} / {totalMessages}");
                 await Task.Delay(100, ct);
             }
 
-            Console.WriteLine($"\r> Ammending: {amendAcount} / {numberOfAmends} . Received: {messagesReceived} / {totalMessages}");
+            Output.WriteLine($"\r> Ammending: {amendAcount} / {numberOfAmends} ({eventNumber}). Received: {messagesReceived} / {totalMessages}");
+
+            Output.WriteLine($"> Complete in {stopwatch.Elapsed:c}");
 
             foreach (var subscription in subscriptions)
             {
                 subscription.Dispose();
             }
-            Output.WriteLine($"> Complete in {stopwatch.Elapsed:c}");
         }
     }
 }

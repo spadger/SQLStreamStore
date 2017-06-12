@@ -282,6 +282,6 @@
             base.Dispose(disposing);
         }
 
-        private IObservable<Unit> GetStoreObservable => _streamStoreNotifier.Value;
+        private IObservable<IStreamsUpdated> GetStoreObservable => _streamStoreNotifier.Value;
     }
 }
