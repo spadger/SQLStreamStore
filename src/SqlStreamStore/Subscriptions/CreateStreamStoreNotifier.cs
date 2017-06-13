@@ -7,5 +7,5 @@
     /// </summary>
     /// <param name="readonlyStreamStore"></param>
     /// <returns></returns>
-    public delegate IStreamStoreNotifier CreateStreamStoreNotifier(IReadonlyStreamStore readonlyStreamStore);
+    public delegate IStreamStoreNotifier CreateStoreUpdatedNotifier(IReadonlyStreamStore readonlyStreamStore);
 }

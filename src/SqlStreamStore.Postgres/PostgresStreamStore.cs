@@ -12,9 +12,9 @@
         private PostgresStreamStoreSettings _settings;
 
         public PostgresStreamStore(PostgresStreamStoreSettings settings)
-            : base(settings.MetadataMaxAgeCacheExpire, settings.MetadataMaxAgeCacheMaxSize, settings.GetUtcNow, settings.LogName)
+            : base(settings)
         {
-            this._settings = settings;
+            _settings = settings;
         }
 
         protected override Task<ReadAllPage> ReadAllForwardsInternal(long fromPositionExlusive, int maxCount, bool prefetch, ReadNextAllPage readNext, CancellationToken cancellationToken)

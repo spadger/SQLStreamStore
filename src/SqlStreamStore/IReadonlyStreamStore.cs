@@ -11,6 +11,8 @@
     /// </summary>
     public interface IReadonlyStreamStore : IDisposable
     {
+        IStreamStoreNotifier Notifier { get; }
+
         /// <summary>
         ///     Reads messages from all streams forwards.
         /// </summary>
@@ -231,5 +233,7 @@
             CancellationToken cancellationToken = default(CancellationToken));
 
         event Action OnDispose;
+
+        void NotifyStreamsUpdated(StreamsUpdated streamsUpdated);
     }
 }

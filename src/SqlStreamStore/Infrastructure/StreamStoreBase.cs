@@ -19,16 +19,9 @@ namespace SqlStreamStore.Infrastructure
         /// <summary>
         ///     Initialized an new instance of a <see cref="StreamStoreBase"/>
         /// </summary>
-        /// <param name="metadataMaxAgeCacheExpiry"></param>
-        /// <param name="metadataMaxAgeCacheMaxSize"></param>
-        /// <param name="getUtcNow"></param>
-        /// <param name="logName"></param>
-        protected StreamStoreBase(
-            TimeSpan metadataMaxAgeCacheExpiry,
-            int metadataMaxAgeCacheMaxSize,
-            GetUtcNow getUtcNow,
-            string logName)
-            : base(metadataMaxAgeCacheExpiry, metadataMaxAgeCacheMaxSize, getUtcNow, logName)
+        /// <param name="settings">Settings to configure the stream store instance.</param>
+        protected StreamStoreBase(StreamStoreSettings settings)
+            : base(settings)
         {}
 
         /// <inheritdoc />

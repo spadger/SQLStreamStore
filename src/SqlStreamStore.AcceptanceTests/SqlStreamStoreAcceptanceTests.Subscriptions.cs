@@ -191,21 +191,24 @@
         {
             using (var fixture = GetFixture())
             {
-                using (var store = await fixture.GetStreamStore())
+                using(var store = await fixture.GetStreamStore())
                 {
+                    await store.Notifier.IsInitialized;
+
                     string streamId1 = "stream-1";
 
                     string streamId2 = "stream-2";
 
                     var receiveMessages = new TaskCompletionSource<StreamMessage>();
                     List<StreamMessage> receivedMessages = new List<StreamMessage>();
-                    using (store.SubscribeToAll(
+                    using(store.SubscribeToAll(
                         null,
                         (_, message) =>
                         {
-                            _testOutputHelper.WriteLine($"Received message {message.StreamId} {message.StreamVersion} {message.Position}");
+                            _testOutputHelper.WriteLine(
+                                $"Received message {message.StreamId} {message.StreamVersion} {message.Position}");
                             receivedMessages.Add(message);
-                            if (message.StreamId == streamId1 && message.StreamVersion == 3)
+                            if(message.StreamId == streamId1 && message.StreamVersion == 3)
                             {
                                 receiveMessages.SetResult(message);
                             }

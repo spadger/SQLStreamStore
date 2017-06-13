@@ -10,7 +10,6 @@
     using SqlStreamStore.Imports.Ensure.That;
     using SqlStreamStore.Infrastructure;
     using SqlStreamStore.MsSqlScripts;
-    using SqlStreamStore.Subscriptions;
 
     /// <summary>
     ///     Represents a Micrsoft SQL Server stream store implementation.
@@ -18,7 +17,6 @@
     public sealed partial class MsSqlStreamStore : StreamStoreBase
     {
         private readonly Func<SqlConnection> _createConnection;
-        private readonly Lazy<IStreamStoreNotifier> _streamStoreNotifier;
         private readonly Scripts _scripts;
         private readonly SqlMetaData[] _appendToStreamSqlMetadata;
         private const int FirstSchemaVersion = 1;
@@ -29,23 +27,12 @@
         /// </summary>
         /// <param name="settings">A settings class to configur this instance.</param>
         public MsSqlStreamStore(MsSqlStreamStoreSettings settings)
-            :base(settings.MetadataMaxAgeCacheExpire, settings.MetadataMaxAgeCacheMaxSize,
-                 settings.GetUtcNow, settings.LogName)
+            :base(settings)
         {
             Ensure.That(settings, nameof(settings)).IsNotNull();
 
             _createConnection = () => new SqlConnection(settings.ConnectionString);
-            _streamStoreNotifier = new Lazy<IStreamStoreNotifier>(() =>
-                {
-                    if(settings.CreateStreamStoreNotifier == null)
-                    {
-                        throw new InvalidOperationException(
-                            "Cannot create notifier because supplied createStreamStoreNotifier was null");
-                    }
-                    return settings.CreateStreamStoreNotifier.Invoke(this);
-                });
             _scripts = new Scripts(settings.Schema);
-
             var sqlMetaData = new List<SqlMetaData>
             {
                 new SqlMetaData("StreamVersion", SqlDbType.Int, true, false, SortOrder.Unspecified, -1),
@@ -269,19 +256,5 @@
                 }
             }
         }
-
-        protected override void Dispose(bool disposing)
-        {
-            if(disposing)
-            {
-                if(_streamStoreNotifier.IsValueCreated)
-                {
-                    _streamStoreNotifier.Value.Dispose();
-                }
-            }
-            base.Dispose(disposing);
-        }
-
-        private IObservable<IStreamsUpdated> GetStoreObservable => _streamStoreNotifier.Value;
     }
 }

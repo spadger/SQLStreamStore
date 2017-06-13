@@ -19,55 +19,38 @@ namespace SqlStreamStore
     public sealed class InMemoryStreamStore : StreamStoreBase
     {
         private readonly InMemoryAllStream _allStream = new InMemoryAllStream();
-        private readonly GetUtcNow _getUtcNow;
         private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-        private readonly Action _onStreamAppended;
         private readonly Dictionary<string, InMemoryStream> _streams = new Dictionary<string, InMemoryStream>();
-        private readonly Subject<IStreamsUpdated> _notifications = new Subject<IStreamsUpdated>();
-        private readonly InterlockedBoolean _signallingToSubscribers = new InterlockedBoolean();
         private int _currentPosition;
-        private static readonly ReadNextStreamPage s_readNextNotFound = (_, ct) =>
-        {
-            throw new InvalidOperationException("Cannot read next page of non-exisitent stream");
-        };
+        private static readonly ReadNextStreamPage s_readNextNotFound =
+            (_, ct) => throw new InvalidOperationException("Cannot read next page of non-exisitent stream");
 
-        public InMemoryStreamStore(GetUtcNow getUtcNow = null, string logName = null)
-            : base(TimeSpan.FromMinutes(1), 10000, getUtcNow, logName ?? nameof(InMemoryStreamStore))
+        public InMemoryStreamStore(StreamStoreSettings settings = null)
+            : base(settings)
         {
-            _getUtcNow = getUtcNow ?? SystemClock.GetUtcNow;
             _allStream.AddFirst(new InMemoryStreamMessage(
                 "<in-memory-root-message>",
                 Guid.NewGuid(),
                 -1,
                 -1,
-                _getUtcNow(),
+                GetUtcNow(),
                 null,
                 null,
                 null));
-            _onStreamAppended = () =>
-            {
-                if(_signallingToSubscribers.CompareExchange(true, false) == false)
-                {
-                    Task.Run(() =>
-                    {
-                        _notifications.OnNext(new StreamsUpdated(new Dictionary<string, int>()));
-                        _signallingToSubscribers.Set(false);
-                    });
-                }
-            };
         }
 
         protected override void Dispose(bool disposing)
         {
             using(_lock.UseWriteLock())
             {
-                _notifications.OnCompleted();
                 _allStream.Clear();
                 _streams.Clear();
             }
         }
 
-        protected override Task<int> GetStreamMessageCount(string streamId, CancellationToken cancellationToken)
+        protected override Task<int> GetStreamMessageCount(
+            string streamId,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             using(_lock.UseReadLock())
             {
@@ -134,8 +117,7 @@ namespace SqlStreamStore
                     inMemoryStream = new InMemoryStream(
                         streamId,
                         _allStream,
-                        _getUtcNow,
-                        _onStreamAppended,
+                        GetUtcNow,
                         () => _currentPosition++);
                     inMemoryStream.AppendToStream(expectedVersion, messages);
                     _streams.Add(streamId, inMemoryStream);
@@ -671,7 +653,7 @@ namespace SqlStreamStore
                 streamId,
                 startVersion,
                 this,
-                _notifications,
+                StreamsUpdated,
                 streamMessageReceived,
                 subscriptionDropped,
                 hasCaughtUp,
@@ -696,7 +678,7 @@ namespace SqlStreamStore
             return new AllStreamSubscription(
                 fromPosition,
                 this,
-                _notifications,
+                StreamsUpdated,
                 streamMessageReceived,
                 subscriptionDropped,
                 hasCaughtUp,

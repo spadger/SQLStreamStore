@@ -17,7 +17,7 @@ namespace SqlStreamStore
                 streamId,
                 startVersion,
                 this,
-                GetStoreObservable,
+                StreamsUpdated,
                 streamMessageReceived,
                 subscriptionDropped,
                 hasCaughtUp,
@@ -36,7 +36,7 @@ namespace SqlStreamStore
             return new AllStreamSubscription(
                 fromPosition,
                 this,
-                GetStoreObservable,
+                StreamsUpdated,
                 streamMessageReceived,
                 subscriptionDropped,
                 hasCaughtUp,

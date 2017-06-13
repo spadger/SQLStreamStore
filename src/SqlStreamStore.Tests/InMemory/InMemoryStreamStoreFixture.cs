@@ -5,10 +5,15 @@ namespace SqlStreamStore.InMemory
 
     public class InMemoryStreamStoreFixture : StreamStoreAcceptanceTestFixture
     {
-        public override Task<IStreamStore> GetStreamStore()
+        public override async Task<IStreamStore> GetStreamStore()
         {
-            IStreamStore streamStore = new InMemoryStreamStore(() => GetUtcNow());
-            return Task.FromResult(streamStore);
+            var settings = new StreamStoreSettings
+            {
+                GetUtcNow = () => GetUtcNow()
+            };
+            IStreamStore streamStore = new InMemoryStreamStore(settings);
+            await streamStore.Notifier.IsInitialized;
+            return streamStore;
         }
     }
 }

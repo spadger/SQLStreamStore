@@ -20,19 +20,27 @@ namespace SqlStreamStore.Infrastructure
         protected readonly ILog Logger;
         private bool _isDisposed;
         private readonly MetadataMaxAgeCache _metadataMaxAgeCache;
+        private readonly Subject<IStreamsUpdated> _streamsUpdated = new Subject<IStreamsUpdated>();
+        protected IObservable<IStreamsUpdated> StreamsUpdated => _streamsUpdated;
+        protected readonly StreamStoreSettings Settings;
 
-        protected ReadonlyStreamStoreBase(
-            TimeSpan metadataMaxAgeCacheExpiry,
-            int metadataMaxAgeCacheMaxSize,
-            GetUtcNow getUtcNow,
-            string logName)
+        /// <summary>
+        ///     Initialized an new instance of a <see cref="StreamStoreBase"/>
+        /// </summary>
+        /// <param name="settings">Settings to configure the stream store instance.</param>
+        protected ReadonlyStreamStoreBase(StreamStoreSettings settings)
         {
-            GetUtcNow = getUtcNow ?? SystemClock.GetUtcNow;
-            Logger = LogProvider.GetLogger(logName);
+            Settings = settings ?? new StreamStoreSettings();
+            GetUtcNow = Settings.GetUtcNow;
+            Logger = LogProvider.GetLogger(Settings.LogName);
 
-            _metadataMaxAgeCache = new MetadataMaxAgeCache(this, metadataMaxAgeCacheExpiry,
-                metadataMaxAgeCacheMaxSize, GetUtcNow);
+            _metadataMaxAgeCache = new MetadataMaxAgeCache(this, Settings.MetadataMaxAgeCacheExpire,
+                Settings.MetadataMaxAgeCacheMaxSize, GetUtcNow);
+
+            Notifier = Settings.CreateStoreUpdatedNotifier(this);
         }
+
+        public IStreamStoreNotifier Notifier { get; }
 
         public async Task<ReadAllPage> ReadAllForwards(
             long fromPositionInclusive,
@@ -61,7 +69,7 @@ namespace SqlStreamStore.Infrastructure
             // Under heavy parallel load, gaps may appear in the position sequence due to sequence
             // number reservation of in-flight transactions.
             // Here we check if there are any gaps, and in the unlikely event there is, we delay a little bit
-            // and re-issue the read. This is expected 
+            // and re-issue the read. This is expected.
             if(!page.IsEnd || page.Messages.Length <= 1)
             {
                 return await FilterExpired(page, ReadNext, cancellationToken).NotOnCapturedContext();
@@ -171,7 +179,7 @@ namespace SqlStreamStore.Infrastructure
             Ensure.That(streamMessageReceived, nameof(streamMessageReceived)).IsNotNull();
 
             GuardAgainstDisposed();
-            
+
             return SubscribeToStreamInternal(
                 streamId,
                 continueAfterVersion,
@@ -233,6 +241,11 @@ namespace SqlStreamStore.Infrastructure
         }
 
         public event Action OnDispose;
+
+        public void NotifyStreamsUpdated(StreamsUpdated streamsUpdated)
+        {
+            _streamsUpdated.OnNext(streamsUpdated);
+        }
 
         protected abstract Task<ReadAllPage> ReadAllForwardsInternal(
             long fromPositionExlusive,

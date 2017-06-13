@@ -11,7 +11,6 @@ namespace SqlStreamStore.InMemory
         private readonly string _streamId;
         private readonly InMemoryAllStream _inMemoryAllStream;
         private readonly GetUtcNow _getUtcNow;
-        private readonly Action _onStreamAppended;
         private readonly Func<int> _getNextPosition;
         private readonly List<InMemoryStreamMessage> _messages = new List<InMemoryStreamMessage>();
         private readonly Dictionary<Guid, InMemoryStreamMessage> _messagesById = new Dictionary<Guid, InMemoryStreamMessage>();
@@ -20,13 +19,11 @@ namespace SqlStreamStore.InMemory
             string streamId,
             InMemoryAllStream inMemoryAllStream,
             GetUtcNow getUtcNow,
-            Action onStreamAppended,
             Func<int> getNextPosition)
         {
             _streamId = streamId;
             _inMemoryAllStream = inMemoryAllStream;
             _getUtcNow = getUtcNow;
-            _onStreamAppended = onStreamAppended;
             _getNextPosition = getNextPosition;
         }
 
@@ -159,7 +156,6 @@ namespace SqlStreamStore.InMemory
                 _messagesById.Add(newmessage.MessageId, inMemorymessage);
                 _inMemoryAllStream.AddAfter(_inMemoryAllStream.Last, inMemorymessage);
             }
-            _onStreamAppended();
         }
 
         internal void DeleteAllEvents(int expectedVersion)
