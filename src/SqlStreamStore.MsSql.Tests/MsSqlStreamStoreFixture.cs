@@ -42,7 +42,7 @@ namespace SqlStreamStore
             };
             var store = new MsSqlStreamStore(settings);
             await store.CreateSchema();
-            await store.Notifier.IsInitialized;
+            await store.EnableSubscriptions();
 
             return store;
         }
@@ -57,7 +57,7 @@ namespace SqlStreamStore
             };
             var store = new MsSqlStreamStore(settings);
             await store.CreateSchema_v1_ForTests();
-            await store.Notifier.IsInitialized;
+            await store.EnableSubscriptions();
 
             return store;
         }
@@ -74,7 +74,7 @@ namespace SqlStreamStore
 
             var store = new MsSqlStreamStore(settings);
             await store.CreateSchema();
-            //await store.Notifier.IsInitialized;
+            await store.EnableSubscriptions();
 
             return store;
         }

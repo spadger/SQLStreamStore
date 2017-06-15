@@ -11,7 +11,7 @@ namespace SqlStreamStore.Subscriptions
     /// </summary>
     public interface IStreamStoreNotifier : IDisposable
     {
-        Task IsInitialized { get; }
+        Task Initialize();
     }
 
     public interface IStreamsUpdated : IReadOnlyDictionary<string, int>

@@ -11,7 +11,7 @@
     /// </summary>
     public interface IReadonlyStreamStore : IDisposable
     {
-        IStreamStoreNotifier Notifier { get; }
+        Task EnableSubscriptions();
 
         /// <summary>
         ///     Reads messages from all streams forwards.

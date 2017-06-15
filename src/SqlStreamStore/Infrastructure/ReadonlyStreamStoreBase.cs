@@ -22,7 +22,7 @@ namespace SqlStreamStore.Infrastructure
         private readonly MetadataMaxAgeCache _metadataMaxAgeCache;
         private readonly Subject<IStreamsUpdated> _streamsUpdated = new Subject<IStreamsUpdated>();
         protected IObservable<IStreamsUpdated> StreamsUpdated => _streamsUpdated;
-        protected readonly StreamStoreSettings Settings;
+        private readonly StreamStoreSettings _settings;
 
         /// <summary>
         ///     Initialized an new instance of a <see cref="StreamStoreBase"/>
@@ -30,17 +30,19 @@ namespace SqlStreamStore.Infrastructure
         /// <param name="settings">Settings to configure the stream store instance.</param>
         protected ReadonlyStreamStoreBase(StreamStoreSettings settings)
         {
-            Settings = settings ?? new StreamStoreSettings();
-            GetUtcNow = Settings.GetUtcNow;
-            Logger = LogProvider.GetLogger(Settings.LogName);
+            _settings = settings ?? new StreamStoreSettings();
+            GetUtcNow = _settings.GetUtcNow;
+            Logger = LogProvider.GetLogger(_settings.LogName);
 
-            _metadataMaxAgeCache = new MetadataMaxAgeCache(this, Settings.MetadataMaxAgeCacheExpire,
-                Settings.MetadataMaxAgeCacheMaxSize, GetUtcNow);
-
-            Notifier = Settings.CreateStoreUpdatedNotifier(this);
+            _metadataMaxAgeCache = new MetadataMaxAgeCache(this, _settings.MetadataMaxAgeCacheExpire,
+                _settings.MetadataMaxAgeCacheMaxSize, GetUtcNow);
         }
 
-        public IStreamStoreNotifier Notifier { get; }
+        public Task EnableSubscriptions()
+        {
+            var settingsCreateStoreUpdatedNotifier = _settings.CreateStoreUpdatedNotifier(this);
+            return settingsCreateStoreUpdatedNotifier.Initialize();
+        }
 
         public async Task<ReadAllPage> ReadAllForwards(
             long fromPositionInclusive,

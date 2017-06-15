@@ -44,10 +44,13 @@
         {
             _readHeadPosition = readHeadPosition;
             _interval = interval;
-            //Task.Run(Poll, _disposed.Token);
         }
 
-        public Task IsInitialized => _initialized.Task;
+        public Task Initialize()
+        {
+            Task.Run(Poll, _disposed.Token);
+            return _initialized.Task;
+        }
 
         public void Dispose()
         {

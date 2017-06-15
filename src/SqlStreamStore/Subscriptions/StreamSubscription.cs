@@ -115,7 +115,7 @@
             }
             else if (_continueAfterVersion.Value == StreamVersion.End)
             {
-                await Initialize();
+                await GetNextVersion();
             }
             else
             {
@@ -164,7 +164,7 @@
             }
         }
 
-        private async Task Initialize()
+        private async Task GetNextVersion()
         {
             ReadStreamPage eventsPage;
             try

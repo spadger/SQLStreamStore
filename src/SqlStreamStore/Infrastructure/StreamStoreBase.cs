@@ -44,12 +44,6 @@ namespace SqlStreamStore.Infrastructure
             return AppendToStreamInternal(streamId, expectedVersion, messages, cancellationToken);
         }
 
-        private async Task<AppendResult> CreateAppendResultAtHeadPosition(int expectedVersion, CancellationToken cancellationToken)
-        {
-            var position = await ReadHeadPosition(cancellationToken);
-            return new AppendResult(expectedVersion, position);
-        }
-
         /// <inheritdoc />
         public Task DeleteStream(
             StreamId streamId,
@@ -110,6 +104,13 @@ namespace SqlStreamStore.Infrastructure
                 metadataJson,
                 cancellationToken);
         }
+
+        private async Task<AppendResult> CreateAppendResultAtHeadPosition(int expectedVersion, CancellationToken cancellationToken)
+        {
+            var position = await ReadHeadPosition(cancellationToken);
+            return new AppendResult(expectedVersion, position);
+        }
+
 
         /// <summary>
         ///     Gets the count of messages in a stream.

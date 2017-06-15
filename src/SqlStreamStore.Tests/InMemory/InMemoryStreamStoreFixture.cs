@@ -11,9 +11,9 @@ namespace SqlStreamStore.InMemory
             {
                 GetUtcNow = () => GetUtcNow()
             };
-            IStreamStore streamStore = new InMemoryStreamStore(settings);
-            await streamStore.Notifier.IsInitialized;
-            return streamStore;
+            IStreamStore store = new InMemoryStreamStore(settings);
+            await store.EnableSubscriptions();
+            return store;
         }
     }
 }

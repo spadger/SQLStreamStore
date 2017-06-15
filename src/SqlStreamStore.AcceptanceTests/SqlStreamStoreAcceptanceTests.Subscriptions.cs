@@ -193,8 +193,6 @@
             {
                 using(var store = await fixture.GetStreamStore())
                 {
-                    await store.Notifier.IsInitialized;
-
                     string streamId1 = "stream-1";
 
                     string streamId2 = "stream-2";
@@ -630,7 +628,7 @@
                         });
                     // First message is blocked in handling, the second is co-operatively cancelled
                     await AppendMessages(store, streamId, 2); 
-                    await handler.WaitAsync();
+                    await handler.WaitAsync().WithTimeout(5000);
                     subscription.Dispose();
                     handler.Set();
 
